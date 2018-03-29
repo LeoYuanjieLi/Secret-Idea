@@ -64,12 +64,26 @@ app.get('/about', gougou, (req, res) => {
     });
 });
 
+
+// Idea Route
+app.get('/ideas', (req, res) => {
+    console.log("successful connect to /ideas route.")
+    Idea.find({})
+    .sort({date:'desc'})
+    .then( ideas => {
+        res.render( 'ideas/index', {
+            ideas: ideas 
+        });
+    });
+});
+
+
 // Add Idea Form Route
 app.get('/ideas/add',(req, res) => {
     res.render('ideas/add');
 });
 
-// Process Form
+// Post an Idea - Process Form
 app.post('/ideas', (req, res) => {
     let errors = [];
     if (!req.body.title) {
