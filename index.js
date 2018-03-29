@@ -1,12 +1,12 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
-const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
+const bodyParser = require('body-parser');4
 const mongoose = require('mongoose');
 
 
 const app = express();
 
-const port = 5000;
 
 // Map global promise - get rid of warnings
 mongoose.Promise = global.Promise;
@@ -36,6 +36,10 @@ app.use(bodyParser.json());
 
 // how middleware works
 // app.use('/', sayHello);
+
+// method override middleware
+app.use(methodOverride("_method"));
+
 
 function baobao(req, res, next) {
     console.log("I love my baobao at", Date.now());
@@ -83,6 +87,23 @@ app.get('/ideas/add',(req, res) => {
     res.render('ideas/add');
 });
 
+// Edit Idea Form Route
+app.get('/ideas/edit/:id', (req, res) => {
+    Idea.findOne({
+        _id: req.params.id
+    })
+    .catch(err => {
+        console.log("err found, reason:", err);
+    })
+    .then(idea => {
+        res.render('ideas/edit', {
+            idea: idea
+        });
+    })
+
+});
+
+
 // Post an Idea - Process Form
 app.post('/ideas', (req, res) => {
     let errors = [];
@@ -117,6 +138,25 @@ app.post('/ideas', (req, res) => {
         })
     }
 });
+
+app.put('/ideas/:id', (req, res) => {
+    console.log("req.params are:", req.params);
+    Idea.findOne({
+        _id: req.params.id
+    })
+    .then(idea => {
+        idea.title = req.body.title;
+        idea.details = req.body.details;
+        idea.date = Date.now();
+
+        idea.save()
+        .then(idea => {
+            res.redirect('/ideas');
+        })
+    });
+});
+
+const port = 5000;
 
 app.listen(port, ()=> {
     console.log(`Server started on port ${port}`);
