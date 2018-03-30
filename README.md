@@ -12,3 +12,4 @@
 ### TO DO
 - Sign up
 - Log in
+- JWT
