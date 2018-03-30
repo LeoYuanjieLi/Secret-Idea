@@ -139,6 +139,7 @@ app.post('/ideas', (req, res) => {
     }
 });
 
+// Edit an idea
 app.put('/ideas/:id', (req, res) => {
     console.log("req.params are:", req.params);
     Idea.findOne({
@@ -155,6 +156,15 @@ app.put('/ideas/:id', (req, res) => {
         })
     });
 });
+
+// Delete an idea
+app.delete('/ideas/:id', (req, res) => {
+    console.log("Idea number", req.params.id, "got deleted");
+    Idea.remove({_id: req.params.id})
+    .then(() => {
+        res.redirect('/ideas');
+    });
+})
 
 const port = 5000;
 
