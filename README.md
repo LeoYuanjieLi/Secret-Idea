@@ -7,8 +7,8 @@
 - Add an idea -- error handler client side + server side
 - Edit ideas
 - Actually add a post to database
+- Delete ideas
 
 ### TO DO
 - Sign up
 - Log in
-- Delete ideas
