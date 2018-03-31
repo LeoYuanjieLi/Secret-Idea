@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
+
 const router = express.Router();
+const {ensureAuthenticated} = require('./helpers/auth');
 
 // Map global promise - get rid of warnings
 mongoose.Promise = global.Promise;
@@ -19,9 +21,9 @@ const Idea = mongoose.model('ideas');
 // -------------------------------------------------------
 
 // Idea Route
-router.get('/', (req, res) => {
+router.get('/', ensureAuthenticated, (req, res) => {
     console.log("successful connect to /ideas route.");
-    Idea.find({})
+    Idea.find({user: req.user.id})
     .sort({date:'desc'})
     .then( ideas => {
         res.render( './ideas/index', {
@@ -33,12 +35,12 @@ router.get('/', (req, res) => {
 
 
 // Add Idea Form Route
-router.get('/add',(req, res) => {
+router.get('/add', ensureAuthenticated, (req, res) => {
     res.render('./ideas/add');
 });
 
 // Edit Idea Form Route
-router.get('/edit/:id', (req, res) => {
+router.get('/edit/:id', ensureAuthenticated, (req, res) => {
     Idea.findOne({
         _id: req.params.id
     })
@@ -46,16 +48,21 @@ router.get('/edit/:id', (req, res) => {
         console.log("err found, reason:", err);
     })
     .then(idea => {
-        res.render('./ideas/edit', {
-            idea: idea
-        });
+        if(idea.user != req.user.id){
+            req.flash('error_msg', 'Not Authorized');
+            res.redirect('/ideas');
+        } else {
+            res.render('./ideas/edit', {
+                idea: idea
+            });
+        }
     })
 
 });
 
 
 // Post an Idea - Process Form
-router.post('/', (req, res) => {
+router.post('/', ensureAuthenticated, (req, res) => {
     let errors = [];
     if (!req.body.title) {
         errors.push({text: 'Please add a title'});
@@ -78,7 +85,8 @@ router.post('/', (req, res) => {
         // res.send('successfully sent.');
         const newUser = {
             title: req.body.title,
-            details: req.body.details
+            details: req.body.details,
+            user: req.user.id
         }
 
         new Idea(newUser)
@@ -91,32 +99,42 @@ router.post('/', (req, res) => {
 });
 
 // Edit an idea
-router.put('/:id', (req, res) => {
+router.put('/:id', ensureAuthenticated, (req, res) => {
     console.log("req.params are:", req.params);
     Idea.findOne({
         _id: req.params.id
     })
     .then(idea => {
-        idea.title = req.body.title;
-        idea.details = req.body.details;
-        idea.date = Date.now();
-
-        idea.save()
-        .then(idea => {
-            req.flash('success_msg', 'Idea edited succesfully');
+        if(idea.user != req.user.id){
+            req.flash('error_msg', 'Not Authorized');
             res.redirect('/ideas');
-        })
+        } else {
+            idea.title = req.body.title;
+            idea.details = req.body.details;
+            idea.date = Date.now();
+    
+            idea.save()
+            .then(idea => {
+                req.flash('success_msg', 'Idea edited succesfully');
+                res.redirect('/ideas');
+            })
+        }
     });
 });
 
 // Delete an idea
-router.delete('/:id', (req, res) => {
-    console.log("Idea number", req.params.id, "got deleted");
-    Idea.remove({_id: req.params.id})
-    .then(() => {
-        req.flash('success_msg', 'Idea deleted succesfully');
+router.delete('/:id', ensureAuthenticated, (req, res) => {
+    if(idea.user != req.user.id){
+        req.flash('error_msg', 'Not Authorized');
         res.redirect('/ideas');
-    });
+    } else {
+        console.log("Idea number", req.params.id, "got deleted");
+        Idea.remove({_id: req.params.id})
+        .then(() => {
+            req.flash('success_msg', 'Idea deleted succesfully');
+            res.redirect('/ideas');
+        });
+    }
 })
 
 
