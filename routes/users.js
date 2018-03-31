@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 // Map global promise - get rid of warnings
@@ -13,8 +14,8 @@ mongoose.Promise = global.Promise;
 //     .catch((err) => {console.log(`error message: ${err}`)}) 
 
 // import Idea Schema
-require('../models/Idea');
-const Idea = mongoose.model('ideas');
+require('../models/User');
+const User = mongoose.model('users');
 
 // -------------------------------------------------------
 
@@ -28,7 +29,7 @@ router.get('/register', (req, res) => {
 
 // Register Form POST
 router.post('/register', (req, res) => {
-    console.log(req.body);
+    console.log('register ran!');
     let errors = [];
     if(req.body.password !== req.body.password2) {
         errors.push({text: "Passwords do not match!"});
@@ -47,8 +48,31 @@ router.post('/register', (req, res) => {
             password2: ""
         })
     } else {
-        res.send('passed!');
+        User.findOne({email: req.body.email})
+            .then(user => {
+                if(user){
+                    req.flash('error_msg', "User already exist.")
+                    res.redirect('/users/register')
+                } else {
+                        let newUser = new User({
+                            name: req.body.name,
+                            email: req.body.email,
+                            password: req.body.password,
+                        });
+                        bcrypt.genSalt(10, (err, salt) => {
+                            bcrypt.hash(newUser.password, salt, (err, hash) => {
+                                newUser.password = hash;
+                                newUser.save()
+                                    .then(newUser => {
+                                        req.flash('success_msg', "You are now registered and can log in");
+                                        res.redirect('/users/login');
+                                    })
+                            });
+                        });
+                }
+            })
     }
+
 });
 // -------------------------------------------------------
 // export router
