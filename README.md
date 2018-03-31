@@ -8,8 +8,9 @@
 - Edit ideas
 - Actually add a post to database
 - Delete ideas
-
-### TO DO
 - Sign up
 - Log in
 - JWT
+
+### TO DO
+- polish website
