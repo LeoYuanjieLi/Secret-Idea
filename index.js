@@ -5,6 +5,7 @@ const methodOverride = require('method-override');
 const flash = require("connect-flash");
 const session = require('express-session');
 const bodyParser = require('body-parser');
+const passport = require('passport');
 const mongoose = require('mongoose');
 
 
@@ -14,6 +15,10 @@ const app = express();
 
 const ideas = require('./routes/ideas');
 const users = require('./routes/users');
+
+// Passport Config
+require('./config/passport')(passport);
+
 
 
 
@@ -90,8 +95,10 @@ app.get('/about', gougou, (req, res) => {
 app.use('/ideas', ideas);
 app.use('/users', users);
 
-//  ------------------------------------------
 
+
+
+// -------------------------------------------
 const port = 5000;
 
 app.listen(port, ()=> {
